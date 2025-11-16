@@ -360,6 +360,7 @@ Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(SHIELD_RESET
 // Servo motors
 const int SHOULDER_RIGHT_PIN = 20;  
 const int HEAD_SERVO_PIN = 17;
+const int ELBOW_SERVO_PIN = 18;
 //const int ANTENNA_SERVO_PIN = 16;
 //const int TAIL_SERVO_PIN = 17;
 //const int GRABBER_SERVO_PIN = 18;
@@ -376,6 +377,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, NEOPIXELPIN,
 
 Servo shoulderRight;  // renamed for clarity
 Servo head;  // change names to describe what's moving
+Servo elbowRight;
 Servo antenna;
 Servo tail;
 Servo grabber;
@@ -384,6 +386,7 @@ Servo disk;
 // change as per your robot
 const int SHOULDER_RESET_ANGLE = 30;
 const int HEAD_RESET_ANGLE = 90;
+const int ELBOW_RESET_ANGLE = 0;
 const int NOSE_TWEAK = 90;
 const int TAIL_ANGRY = 0;
 const int TAIL_HAPPY = 180;
@@ -457,8 +460,11 @@ void setupServoMotors() {
 head.attach(HEAD_SERVO_PIN);
 head.write(HEAD_RESET_ANGLE);;
 
- shoulderRight.attach(SHOULDER_RIGHT_PIN);
- shoulderRight.write(SHOULDER_RESET_ANGLE);
+shoulderRight.attach(SHOULDER_RIGHT_PIN);
+shoulderRight.write(SHOULDER_RESET_ANGLE);
+
+elbowRight.attach(ELBOW_SERVO_PIN);
+elbowRight.write(ELBOW_RESET_ANGLE);
 
   //  antenna.attach(ANTENNA_SERVO_PIN);
   //  tail.attach(TAIL_SERVO_PIN);
@@ -503,6 +509,8 @@ int currentHeadAngle = HEAD_RESET_ANGLE;
 int headStepSize = 5;
 int currentShoulderAngle = SHOULDER_RESET_ANGLE;   // start from neutral position
 int shoulderStepSize = 5;        // smooth step
+int currentElbowAngle = ELBOW_RESET_ANGLE;
+int elbowStepSize = 5;
 
 
 void loop() {
@@ -545,6 +553,32 @@ case 0: {
       }
     }
 
+ delay(1200);
+
+
+//
+// --- RESET ELBOW ---
+//
+int elbowTarget = ELBOW_RESET_ANGLE;
+
+if (currentElbowAngle > elbowTarget) {
+  while (currentElbowAngle > elbowTarget) {
+    currentElbowAngle -= elbowStepSize;
+    if (currentElbowAngle < elbowTarget)
+        currentElbowAngle = elbowTarget;
+    elbowRight.write(currentElbowAngle);
+    delay(15);
+  }
+} else {
+  while (currentElbowAngle < elbowTarget) {
+    currentElbowAngle += elbowStepSize;
+    if (currentElbowAngle > elbowTarget)
+        currentElbowAngle = elbowTarget;
+    elbowRight.write(currentElbowAngle);
+    delay(15);
+  }
+}
+
   delay(1800);
     //
     // --- RESET HEAD ---
@@ -573,7 +607,6 @@ case 0: {
 }
 
 
-
 case 1: {  
   Serial.println(F("Case 1: Shoulder up to 90°, then head 30° to the right"));
 
@@ -599,15 +632,32 @@ case 1: {
       delay(15);
     }
   }
-
-  // >>> MAKE SURE SHOULDER IS VISIBLY DONE BEFORE HEAD STARTS <<<
-  delay(1800);  // try 1200ms (1.2s). You can tune: 800–1500ms depending on how dramatic you want it.
-
+ delay(1200);
+ //
+  // --- 2) MOVE ELBOW  ---
   //
-  // --- 2) MOVE HEAD 30° TO THE RIGHT (90° -> 60°) ---
+  int elbowTarget = 100;
+
+  if (currentElbowAngle < elbowTarget) {
+    while (currentElbowAngle < elbowTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowTarget) currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  } else {
+    while (currentElbowAngle > elbowTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowTarget) currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  } 
+ delay(1800);  // try 1200ms (1.2s). You can tune: 800–1500ms depending on how dramatic you want it.
   //
-  const int HEAD_RIGHT_ANGLE = 60;   // 30° to the right from neutral 90
-  int headTarget = HEAD_RIGHT_ANGLE;
+  // --- 3) MOVE HEAD TO THE RIGHT  ---
+  //
+  int headTarget = 60;
 
   if (currentHeadAngle < headTarget) {
     while (currentHeadAngle < headTarget) {
