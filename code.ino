@@ -512,6 +512,134 @@ int shoulderStepSize = 5;        // smooth step
 int currentElbowAngle = ELBOW_RESET_ANGLE;
 int elbowStepSize = 5;
 
+void resetRobotPose() {
+  Serial.println(F("Resetting robot to initial position"));
+
+  //
+  // --- RESET SHOULDER ---
+  //
+  int shoulderTarget = SHOULDER_RESET_ANGLE;
+
+  if (currentShoulderAngle > shoulderTarget) {
+    while (currentShoulderAngle > shoulderTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderTarget)
+          currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      delay(15);
+    }
+  } else {
+    while (currentShoulderAngle < shoulderTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderTarget)
+          currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      delay(15);
+    }
+  }
+
+  delay(1200);
+
+  //
+  // --- RESET ELBOW ---
+  //
+  int elbowTarget = ELBOW_RESET_ANGLE;
+
+  if (currentElbowAngle > elbowTarget) {
+    while (currentElbowAngle > elbowTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowTarget)
+          currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  } else {
+    while (currentElbowAngle < elbowTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowTarget)
+          currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  }
+
+  delay(1800);
+
+  //
+  // --- RESET HEAD ---
+  //
+  int headTarget = HEAD_RESET_ANGLE;
+
+  if (currentHeadAngle > headTarget) {
+    while (currentHeadAngle > headTarget) {
+      currentHeadAngle -= headStepSize;
+      if (currentHeadAngle < headTarget)
+          currentHeadAngle = headTarget;
+      head.write(currentHeadAngle);
+      delay(15);
+    }
+  } else {
+    while (currentHeadAngle < headTarget) {
+      currentHeadAngle += headStepSize;
+      if (currentHeadAngle > headTarget)
+          currentHeadAngle = headTarget;
+      head.write(currentHeadAngle);
+      delay(15);
+    }
+  }
+}
+
+void resetShoulderAndHead() {
+  Serial.println(F("Resetting ONLY shoulder and head to initial position"));
+
+  //
+  // --- RESET SHOULDER ---
+  //
+  int shoulderTarget = SHOULDER_RESET_ANGLE;
+
+  if (currentShoulderAngle > shoulderTarget) {
+    while (currentShoulderAngle > shoulderTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderTarget)
+          currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      delay(15);
+    }
+  } else {
+    while (currentShoulderAngle < shoulderTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderTarget)
+          currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      delay(15);
+    }
+  }
+
+  delay(1200);
+
+  //
+  // --- RESET HEAD ---
+  //
+  int headTarget = HEAD_RESET_ANGLE;
+
+  if (currentHeadAngle > headTarget) {
+    while (currentHeadAngle > headTarget) {
+      currentHeadAngle -= headStepSize;
+      if (currentHeadAngle < headTarget)
+          currentHeadAngle = headTarget;
+      head.write(currentHeadAngle);
+      delay(15);
+    }
+  } else {
+    while (currentHeadAngle < headTarget) {
+      currentHeadAngle += headStepSize;
+      if (currentHeadAngle > headTarget)
+          currentHeadAngle = headTarget;
+      head.write(currentHeadAngle);
+      delay(15);
+    }
+  }
+}
 
 void loop() {
   // If there is data, read it,
@@ -525,90 +653,15 @@ void loop() {
     Serial.println();
 
     switch (data.stateNumber) {
-
-    
+ 
 case 0: {  
-    Serial.println(F("Case 0: RESET to initial robot position"));
-
-    //
-    // --- RESET SHOULDER ---
-    //
-    int shoulderTarget = SHOULDER_RESET_ANGLE;
-
-    if (currentShoulderAngle > shoulderTarget) {
-      while (currentShoulderAngle > shoulderTarget) {
-        currentShoulderAngle -= shoulderStepSize;
-        if (currentShoulderAngle < shoulderTarget)
-            currentShoulderAngle = shoulderTarget;
-        shoulderRight.write(currentShoulderAngle);
-        delay(15);
-      }
-    } else {
-      while (currentShoulderAngle < shoulderTarget) {
-        currentShoulderAngle += shoulderStepSize;
-        if (currentShoulderAngle > shoulderTarget)
-            currentShoulderAngle = shoulderTarget;
-        shoulderRight.write(currentShoulderAngle);
-        delay(15);
-      }
-    }
-
- delay(1200);
-
-
-//
-// --- RESET ELBOW ---
-//
-int elbowTarget = ELBOW_RESET_ANGLE;
-
-if (currentElbowAngle > elbowTarget) {
-  while (currentElbowAngle > elbowTarget) {
-    currentElbowAngle -= elbowStepSize;
-    if (currentElbowAngle < elbowTarget)
-        currentElbowAngle = elbowTarget;
-    elbowRight.write(currentElbowAngle);
-    delay(15);
-  }
-} else {
-  while (currentElbowAngle < elbowTarget) {
-    currentElbowAngle += elbowStepSize;
-    if (currentElbowAngle > elbowTarget)
-        currentElbowAngle = elbowTarget;
-    elbowRight.write(currentElbowAngle);
-    delay(15);
-  }
+  Serial.println(F("Case 0: RESET to initial robot position"));
+  resetRobotPose();
+  break;
 }
-
-  delay(1800);
-    //
-    // --- RESET HEAD ---
-    //
-    int headTarget = HEAD_RESET_ANGLE;
-
-    if (currentHeadAngle > headTarget) {
-      while (currentHeadAngle > headTarget) {
-        currentHeadAngle -= headStepSize;
-        if (currentHeadAngle < headTarget)
-            currentHeadAngle = headTarget;
-        head.write(currentHeadAngle);
-        delay(15);
-      }
-    } else {
-      while (currentHeadAngle < headTarget) {
-        currentHeadAngle += headStepSize;
-        if (currentHeadAngle > headTarget)
-            currentHeadAngle = headTarget;
-        head.write(currentHeadAngle);
-        delay(15);
-      }
-    }
-
-    break;
-}
-
 
 case 1: {  
-  Serial.println(F("Case 1: Shoulder up to 90°, then head 30° to the right"));
+  Serial.println(F("Case 1: Shoulder up, then elbow, then head right, then audio, then reset + elbow to 180"));
 
   //
   // --- 1) MOVE SHOULDER TO 90° ---
@@ -616,7 +669,6 @@ case 1: {
   int shoulderTarget = 90;  // final shoulder angle
 
   if (currentShoulderAngle < shoulderTarget) {
-    // move upward toward 90°
     while (currentShoulderAngle < shoulderTarget) {
       currentShoulderAngle += shoulderStepSize;
       if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
@@ -624,7 +676,6 @@ case 1: {
       delay(15);
     }
   } else {
-    // move downward toward 90°
     while (currentShoulderAngle > shoulderTarget) {
       currentShoulderAngle -= shoulderStepSize;
       if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
@@ -632,9 +683,11 @@ case 1: {
       delay(15);
     }
   }
- delay(1200);
- //
-  // --- 2) MOVE ELBOW  ---
+
+  delay(1200);
+
+  //
+  // --- 2) MOVE ELBOW TO 100° ---
   //
   int elbowTarget = 100;
 
@@ -653,11 +706,13 @@ case 1: {
       delay(15);
     }
   } 
- delay(1800);  // try 1200ms (1.2s). You can tune: 800–1500ms depending on how dramatic you want it.
+
+  delay(1800);  // pause before head
+
   //
-  // --- 3) MOVE HEAD TO THE RIGHT  ---
+  // --- 3) MOVE HEAD TO THE RIGHT (60°) ---
   //
-  int headTarget = 60;
+  int headTarget = 60;  // 30° to the right from 90°
 
   if (currentHeadAngle < headTarget) {
     while (currentHeadAngle < headTarget) {
@@ -675,24 +730,206 @@ case 1: {
     }
   }
 
+  delay(1500);   // wait a bit before playing the audio
+
+  // --- 4) PLAY AUDIO AFTER HEAD FINISHES ---
+  Serial.println(F("Playing 1.mp3"));
+  musicPlayer.startPlayingFile("/1.mp3");   // ensure SD has 1.mp3
+
+  // Wait until the audio is done
+  while (musicPlayer.playingMusic) {
+    delay(100);
+  }
+
+  //
+  // --- 5) RESET SHOULDER & HEAD, MOVE ELBOW TO 180° (ALL TOGETHER) ---
+  //
+  int shoulderResetTarget = SHOULDER_RESET_ANGLE;  // 30
+  int headResetTarget     = HEAD_RESET_ANGLE;      // 90
+  int elbowFinalTarget    = 180;                   // new elbow pose
+
+  bool allDone = false;
+  while (!allDone) {
+    allDone = true;  // assume done, then check each joint
+
+    // Shoulder toward reset
+    if (currentShoulderAngle < shoulderResetTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderResetTarget) currentShoulderAngle = shoulderResetTarget;
+      shoulderRight.write(currentShoulderAngle);
+      allDone = false;
+    } else if (currentShoulderAngle > shoulderResetTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderResetTarget) currentShoulderAngle = shoulderResetTarget;
+      shoulderRight.write(currentShoulderAngle);
+      allDone = false;
+    }
+
+    // Head toward reset
+    if (currentHeadAngle < headResetTarget) {
+      currentHeadAngle += headStepSize;
+      if (currentHeadAngle > headResetTarget) currentHeadAngle = headResetTarget;
+      head.write(currentHeadAngle);
+      allDone = false;
+    } else if (currentHeadAngle > headResetTarget) {
+      currentHeadAngle -= headStepSize;
+      if (currentHeadAngle < headResetTarget) currentHeadAngle = headResetTarget;
+      head.write(currentHeadAngle);
+      allDone = false;
+    }
+
+    // Elbow toward 180°
+    if (currentElbowAngle < elbowFinalTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      allDone = false;
+    } else if (currentElbowAngle > elbowFinalTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      allDone = false;
+    }
+
+    delay(20);  // smooth motion
+  }
+
   matrix.drawRect(2, 2, 5, 5, matrix.Color(200, 90, 30));
   matrix.show();
 
   break;
 }
 
+case 2: {
+  Serial.println(F("Case 2: Elbow to 95°, play audio 2, then shoulder→90 + elbow→180, then audio 3 with BIG elbow wobble"));
+
+  //
+  // --- 1) MOVE ELBOW TO 95° ---
+  //
+  int elbowTarget = 95;
+
+  if (currentElbowAngle < elbowTarget) {
+    while (currentElbowAngle < elbowTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowTarget) currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  } else {
+    while (currentElbowAngle > elbowTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowTarget) currentElbowAngle = elbowTarget;
+      elbowRight.write(currentElbowAngle);
+      delay(15);
+    }
+  }
+
+  // Small green blink on matrix
+  matrix.fillScreen(matrix.Color(0, 200, 30));
+  matrix.show();
+  delay(300);
+  matrix.fillScreen(0);
+  matrix.show();
+
+  delay(1000);  // dramatic pause before audio
+
+  //
+  // --- 2) PLAY AUDIO 2 ---
+  //
+  Serial.println(F("Playing 2.mp3"));
+  musicPlayer.startPlayingFile("/2.mp3");
+
+  // Wait until audio 2 finishes completely
+  while (musicPlayer.playingMusic) {
+    delay(100);
+  }
+
+  //
+  // --- 3) MOVE SHOULDER TO 90° AND ELBOW TO 180° ---
+  //
+  int shoulderTarget = 90;
+  int elbowFinalTarget = 180;   // go fully to 180°
+
+  bool finished = false;
+
+  while (!finished) {
+    finished = true;
+
+    // Shoulder movement
+    if (currentShoulderAngle < shoulderTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    } 
+    else if (currentShoulderAngle > shoulderTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    }
+
+    // Elbow movement toward 180°
+    if (currentElbowAngle < elbowFinalTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    } 
+    else if (currentElbowAngle > elbowFinalTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    }
+
+    delay(20);
+  }
+
+  // ✅ At this point: all movement is DONE.
+  // Now we start audio 3 and do the wobble.
+
+  delay(1800);   // tiny pause after final pose (optional)
+
+  //
+  // --- 4) PLAY AUDIO 3 + BIG ELBOW WOBBLE ---
+  //
+  Serial.println(F("Playing 3.mp3 with BIG elbow wobble"));
+  musicPlayer.startPlayingFile("/3.mp3");   // Make sure 3.mp3 exists on SD
+
+  int baseElbow = currentElbowAngle;   // should be 180 now
+  int wobbleAmplitude = 20;            // bigger motion: ±20°
+  bool goingUp = false;                // start by going down from 180 a bit
+
+  while (musicPlayer.playingMusic) {
+    if (goingUp) {
+      currentElbowAngle += 4;          // bigger step for stronger movement
+      if (currentElbowAngle >= baseElbow) {
+        currentElbowAngle = baseElbow;
+        goingUp = false;
+      }
+    } else {
+      currentElbowAngle -= 4;
+      if (currentElbowAngle <= baseElbow - wobbleAmplitude) {
+        currentElbowAngle = baseElbow - wobbleAmplitude;
+        goingUp = true;
+      }
+    }
+
+    // Safety clamp
+    if (currentElbowAngle < 0)   currentElbowAngle = 0;
+    if (currentElbowAngle > 180) currentElbowAngle = 180;
+
+    elbowRight.write(currentElbowAngle);
+    delay(80);   // faster wobble (lower number = faster)
+  }
+
+  // After audio 3 ends, elbow stays where it stopped in the wobble
+  break;
+}
 
 
-      case 2:
-        Serial.println(F("moving nose to 30"));
-       
 
-        matrix.drawRect(2, 2, 5, 5, matrix.Color(0, 200, 30));
-        matrix.show();
-
-        Serial.println(F("Playing track 001"));
-        musicPlayer.startPlayingFile("/track001.mp3");
-        break;
       case 3:
 
         break;
