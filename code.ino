@@ -801,7 +801,7 @@ case 1: {
 }
 
 case 2: {
-  Serial.println(F("Case 2: Elbow to 95°, play audio 2, then shoulder→90 + elbow→180, then audio 3 with BIG elbow wobble"));
+  Serial.println(F("Case 2: Elbow to 95°, audio 2, shoulder→90 + elbow mirror, audio 3 wobble, then return elbow to 95 & shoulder down"));
 
   //
   // --- 1) MOVE ELBOW TO 95° ---
@@ -831,7 +831,7 @@ case 2: {
   matrix.fillScreen(0);
   matrix.show();
 
-  delay(1000);  // dramatic pause before audio
+  delay(1000);  // dramatic pause before audio 2
 
   //
   // --- 2) PLAY AUDIO 2 ---
@@ -845,74 +845,68 @@ case 2: {
   }
 
   //
- //
-// --- 3) MOVE SHOULDER TO 90° AND ELBOW SAME DISTANCE OPPOSITE DIRECTION ---
-//
+  // --- 3) MOVE SHOULDER TO 90° AND ELBOW MIRROR THE MOVEMENT ---
+  //
+  int shoulderTarget = 90;
 
-int shoulderTarget = 90;
+  // how far the shoulder will move
+  int shoulderStart    = currentShoulderAngle;
+  int shoulderDistance = shoulderTarget - shoulderStart;
 
-// compute how far the shoulder will move
-int shoulderStart = currentShoulderAngle;
-int shoulderDistance = shoulderTarget - shoulderStart;
+  // elbow mirrors in opposite direction (1.5× exaggeration)
+  int elbowFinalTarget = currentElbowAngle - (shoulderDistance * 1.5);
 
-// elbow should mirror this in the opposite direction
-int elbowFinalTarget = currentElbowAngle - (shoulderDistance * 1.5);
+  // clamp safely
+  if (elbowFinalTarget < 0)   elbowFinalTarget = 0;
+  if (elbowFinalTarget > 180) elbowFinalTarget = 180;
 
-// safety clamp
-if (elbowFinalTarget < 0) elbowFinalTarget = 0;
-if (elbowFinalTarget > 180) elbowFinalTarget = 180;
+  bool finished = false;
 
-bool finished = false;
+  while (!finished) {
+    finished = true;
 
-while (!finished) {
-  finished = true;
+    // --- SHOULDER MOVEMENT ---
+    if (currentShoulderAngle < shoulderTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    }
+    else if (currentShoulderAngle > shoulderTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    }
 
-  // --- SHOULDER MOVEMENT ---
-  if (currentShoulderAngle < shoulderTarget) {
-    currentShoulderAngle += shoulderStepSize;
-    if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
-    shoulderRight.write(currentShoulderAngle);
-    finished = false;
+    // --- ELBOW MIRRORED MOVEMENT ---
+    if (currentElbowAngle < elbowFinalTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    }
+    else if (currentElbowAngle > elbowFinalTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    }
+
+    delay(20);
   }
-  else if (currentShoulderAngle > shoulderTarget) {
-    currentShoulderAngle -= shoulderStepSize;
-    if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
-    shoulderRight.write(currentShoulderAngle);
-    finished = false;
-  }
 
-  // --- ELBOW MIRRORED MOVEMENT ---
-  if (currentElbowAngle < elbowFinalTarget) {
-    currentElbowAngle += elbowStepSize;
-    if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
-    elbowRight.write(currentElbowAngle);
-    finished = false;
-  }
-  else if (currentElbowAngle > elbowFinalTarget) {
-    currentElbowAngle -= elbowStepSize;
-    if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
-    elbowRight.write(currentElbowAngle);
-    finished = false;
-  }
-
-  delay(20);
-}
-
-
-  // ✅ At this point: all movement is DONE.
-  // Now we start audio 3 and do the wobble.
-
-  delay(1800);   // tiny pause after final pose (optional)
+  // tiny pause after hitting the dramatic pose
+  delay(1800);
 
   //
-   //
   // --- 4) PLAY AUDIO 3 + BIG ELBOW WOBBLE ---
   //
   Serial.println(F("Playing 3.mp3 with BIG elbow wobble"));
   musicPlayer.startPlayingFile("/3.mp3");   // Make sure 3.mp3 exists on SD
 
-  int baseElbow = currentElbowAngle;   // wherever the elbow ended
-  int wobbleAmplitude = 20;            // how far it swings
+  int baseElbow       = currentElbowAngle;   // wherever the elbow ended (likely near 180)
+  int wobbleAmplitude = 20;                  // how far it swings
 
   // Compute safe wobble limits so we NEVER go below 0° or above 180°
   int lowLimit  = baseElbow - wobbleAmplitude;
@@ -927,7 +921,7 @@ while (!finished) {
 
   while (musicPlayer.playingMusic) {
     if (goingUp) {
-      currentElbowAngle += 4;          // step size – bigger = more dramatic
+      currentElbowAngle += 4;          // bigger step for stronger movement
       if (currentElbowAngle >= highLimit) {
         currentElbowAngle = highLimit;
         goingUp = false;
@@ -941,18 +935,68 @@ while (!finished) {
     }
 
     elbowRight.write(currentElbowAngle);
-    delay(70);   // tune speed: smaller = faster wobble, bigger = slower
+    delay(70);   // wobble speed
   }
 
-  // After audio 3 ends, elbow stays where it stopped in the wobble
+  //
+  // --- 5) AFTER AUDIO 3: SHOULDER DOWN + ELBOW BACK TO 95° ---
+  //
+  Serial.println(F("Audio 3 done – returning shoulder down and elbow back to 95°"));
+
+  int shoulderDownTarget = SHOULDER_RESET_ANGLE; // usually 30
+  int elbowReturnTarget  = 95;                   // previous elbow pose in this case
+
+  bool returnDone = false;
+  while (!returnDone) {
+    returnDone = true;
+
+    // Shoulder down to reset
+    if (currentShoulderAngle < shoulderDownTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderDownTarget) currentShoulderAngle = shoulderDownTarget;
+      shoulderRight.write(currentShoulderAngle);
+      returnDone = false;
+    } else if (currentShoulderAngle > shoulderDownTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderDownTarget) currentShoulderAngle = shoulderDownTarget;
+      shoulderRight.write(currentShoulderAngle);
+      returnDone = false;
+    }
+
+    // Elbow back to 95°
+    if (currentElbowAngle < elbowReturnTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowReturnTarget) currentElbowAngle = elbowReturnTarget;
+      elbowRight.write(currentElbowAngle);
+      returnDone = false;
+    } else if (currentElbowAngle > elbowReturnTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowReturnTarget) currentElbowAngle = elbowReturnTarget;
+      elbowRight.write(currentElbowAngle);
+      returnDone = false;
+    }
+
+    delay(20);  // smooth motion on the way back
+  }
+
   break;
 }
 
+case 3: {
+  Serial.println(F("Case 3: Play audio 4.mp3 only"));
 
+  // Start playing the file
+  Serial.println(F("Playing 4.mp3"));
+  musicPlayer.startPlayingFile("/4.mp3");
 
-      case 3:
+  // Wait until audio finishes
+  while (musicPlayer.playingMusic) {
+    delay(100);
+  }
 
-        break;
+  break;
+}
+
       case 4:
 
         break;
