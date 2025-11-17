@@ -845,46 +845,59 @@ case 2: {
   }
 
   //
-  // --- 3) MOVE SHOULDER TO 90° AND ELBOW TO 180° ---
-  //
-  int shoulderTarget = 90;
-  int elbowFinalTarget = 180;   // go fully to 180°
+ //
+// --- 3) MOVE SHOULDER TO 90° AND ELBOW SAME DISTANCE OPPOSITE DIRECTION ---
+//
 
-  bool finished = false;
+int shoulderTarget = 90;
 
-  while (!finished) {
-    finished = true;
+// compute how far the shoulder will move
+int shoulderStart = currentShoulderAngle;
+int shoulderDistance = shoulderTarget - shoulderStart;
 
-    // Shoulder movement
-    if (currentShoulderAngle < shoulderTarget) {
-      currentShoulderAngle += shoulderStepSize;
-      if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
-      shoulderRight.write(currentShoulderAngle);
-      finished = false;
-    } 
-    else if (currentShoulderAngle > shoulderTarget) {
-      currentShoulderAngle -= shoulderStepSize;
-      if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
-      shoulderRight.write(currentShoulderAngle);
-      finished = false;
-    }
+// elbow should mirror this in the opposite direction
+int elbowFinalTarget = currentElbowAngle - (shoulderDistance * 1.5);
 
-    // Elbow movement toward 180°
-    if (currentElbowAngle < elbowFinalTarget) {
-      currentElbowAngle += elbowStepSize;
-      if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
-      elbowRight.write(currentElbowAngle);
-      finished = false;
-    } 
-    else if (currentElbowAngle > elbowFinalTarget) {
-      currentElbowAngle -= elbowStepSize;
-      if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
-      elbowRight.write(currentElbowAngle);
-      finished = false;
-    }
+// safety clamp
+if (elbowFinalTarget < 0) elbowFinalTarget = 0;
+if (elbowFinalTarget > 180) elbowFinalTarget = 180;
 
-    delay(20);
+bool finished = false;
+
+while (!finished) {
+  finished = true;
+
+  // --- SHOULDER MOVEMENT ---
+  if (currentShoulderAngle < shoulderTarget) {
+    currentShoulderAngle += shoulderStepSize;
+    if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
+    shoulderRight.write(currentShoulderAngle);
+    finished = false;
   }
+  else if (currentShoulderAngle > shoulderTarget) {
+    currentShoulderAngle -= shoulderStepSize;
+    if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
+    shoulderRight.write(currentShoulderAngle);
+    finished = false;
+  }
+
+  // --- ELBOW MIRRORED MOVEMENT ---
+  if (currentElbowAngle < elbowFinalTarget) {
+    currentElbowAngle += elbowStepSize;
+    if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+    elbowRight.write(currentElbowAngle);
+    finished = false;
+  }
+  else if (currentElbowAngle > elbowFinalTarget) {
+    currentElbowAngle -= elbowStepSize;
+    if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+    elbowRight.write(currentElbowAngle);
+    finished = false;
+  }
+
+  delay(20);
+}
+
 
   // ✅ At this point: all movement is DONE.
   // Now we start audio 3 and do the wobble.
@@ -892,36 +905,43 @@ case 2: {
   delay(1800);   // tiny pause after final pose (optional)
 
   //
+   //
   // --- 4) PLAY AUDIO 3 + BIG ELBOW WOBBLE ---
   //
   Serial.println(F("Playing 3.mp3 with BIG elbow wobble"));
   musicPlayer.startPlayingFile("/3.mp3");   // Make sure 3.mp3 exists on SD
 
-  int baseElbow = currentElbowAngle;   // should be 180 now
-  int wobbleAmplitude = 20;            // bigger motion: ±20°
-  bool goingUp = false;                // start by going down from 180 a bit
+  int baseElbow = currentElbowAngle;   // wherever the elbow ended
+  int wobbleAmplitude = 20;            // how far it swings
+
+  // Compute safe wobble limits so we NEVER go below 0° or above 180°
+  int lowLimit  = baseElbow - wobbleAmplitude;
+  if (lowLimit < 0) lowLimit = 0;
+
+  int highLimit = baseElbow + wobbleAmplitude;
+  if (highLimit > 180) highLimit = 180;
+
+  // Start from the base angle
+  currentElbowAngle = baseElbow;
+  bool goingUp = true;   // first move upward (toward highLimit)
 
   while (musicPlayer.playingMusic) {
     if (goingUp) {
-      currentElbowAngle += 4;          // bigger step for stronger movement
-      if (currentElbowAngle >= baseElbow) {
-        currentElbowAngle = baseElbow;
+      currentElbowAngle += 4;          // step size – bigger = more dramatic
+      if (currentElbowAngle >= highLimit) {
+        currentElbowAngle = highLimit;
         goingUp = false;
       }
     } else {
       currentElbowAngle -= 4;
-      if (currentElbowAngle <= baseElbow - wobbleAmplitude) {
-        currentElbowAngle = baseElbow - wobbleAmplitude;
+      if (currentElbowAngle <= lowLimit) {
+        currentElbowAngle = lowLimit;
         goingUp = true;
       }
     }
 
-    // Safety clamp
-    if (currentElbowAngle < 0)   currentElbowAngle = 0;
-    if (currentElbowAngle > 180) currentElbowAngle = 180;
-
     elbowRight.write(currentElbowAngle);
-    delay(80);   // faster wobble (lower number = faster)
+    delay(70);   // tune speed: smaller = faster wobble, bigger = slower
   }
 
   // After audio 3 ends, elbow stays where it stopped in the wobble
