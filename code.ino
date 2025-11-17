@@ -60,11 +60,11 @@
 
 // CHANGEHERE
 // For the transmitter
-//const int NRF_CE_PIN = A4, NRF_CSN_PIN = A5;
+const int NRF_CE_PIN = A4, NRF_CSN_PIN = A5;
 
 // CHANGEHERE
 // for the receiver
-const int NRF_CE_PIN = A11, NRF_CSN_PIN = A15;
+//const int NRF_CE_PIN = A11, NRF_CSN_PIN = A15;
 
 // nRF 24L01 pin   name
 //          1      GND
@@ -132,7 +132,7 @@ void setupRF24Common() {
 // CHANGEHERE
 
 // Transmitter code
-/*
+
 // Transmitter pin usage
 const int LCD_RS_PIN = 3, LCD_EN_PIN = 2, LCD_D4_PIN = 4, LCD_D5_PIN = 5, LCD_D6_PIN = 6, LCD_D7_PIN = 7;
 const int SW1_PIN = 8, SW2_PIN = 9, SW3_PIN = 10, SW4_PIN = A3, SW5_PIN = A2;
@@ -145,12 +145,13 @@ LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LC
 
 
 const int NUM_OF_STATES = 6;
-char* theStates[] = { "0 robot wakes",
-                      "1 robot hello",
-                      "2 robot explains",
-                      "3 robot pleads",
-                      "4 robot weeps",
-                      "5 robot goodbye" };
+char* theStates[] = { "0 robot start state",
+                      "1 robot scene1",
+                      "2 robot scene3-1",
+                      "3 robot scene3-2",
+                      "4 robot scene3-3",
+                      "5 robot scene3-4",
+                      "6 robot scene3-5" };
 
 void updateLCD() {
 
@@ -322,8 +323,8 @@ void clearData() {
 
 // End of transmitter code
 // CHANGEHERE
-*/
 
+/*
 // Receiver Code
 // CHANGEHERE
 
@@ -1185,9 +1186,25 @@ while (musicPlayer.playingMusic) {
   break;
 }
 
+case 6: {
+  Serial.println(F("Case 6: Play audio 8.mp3 only"));
+
+  Serial.println(F("Playing 8.mp3"));
+  musicPlayer.startPlayingFile("/8.mp3");
+
+  // Wait until audio finishes
+  while (musicPlayer.playingMusic) {
+    delay(100);
+  }
+
+  break;
+}
+
+
 
     }
   }
 }  // end of loop()
 // end of receiver code
 // CHANGEHERE
+*/
