@@ -997,12 +997,195 @@ case 3: {
   break;
 }
 
-      case 4:
+case 4: {
+  Serial.println(F("Case 4: audio 5 → shoulder+elbow move (like case 2) → audio 6 + wobble"));
 
-        break;
+  //
+  // --- 1) PLAY AUDIO 5 ---
+  //
+  Serial.println(F("Playing 5.mp3"));
+  musicPlayer.startPlayingFile("/5.mp3");
 
-      default:
-        Serial.println(F("Invalid option"));
+  // Wait until audio 5 finishes
+  while (musicPlayer.playingMusic) {
+    delay(100);
+  }
+
+  //
+  // --- 2) SHOULDER→90 AND ELBOW MIRROR MOVE (LIKE CASE 2) ---
+  //
+  int shoulderTarget = 90;
+
+  // how far the shoulder will move
+  int shoulderStart    = currentShoulderAngle;
+  int shoulderDistance = shoulderTarget - shoulderStart;
+
+  // elbow mirrors in the opposite direction, a bit exaggerated
+  int elbowFinalTarget = currentElbowAngle - (shoulderDistance * 1.5);
+
+  // safety clamp
+  if (elbowFinalTarget < 0)   elbowFinalTarget = 0;
+  if (elbowFinalTarget > 180) elbowFinalTarget = 180;
+
+  bool finished = false;
+  while (!finished) {
+    finished = true;
+
+    // --- SHOULDER MOVEMENT ---
+    if (currentShoulderAngle < shoulderTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    }
+    else if (currentShoulderAngle > shoulderTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderTarget) currentShoulderAngle = shoulderTarget;
+      shoulderRight.write(currentShoulderAngle);
+      finished = false;
+    }
+
+    // --- ELBOW MIRRORED MOVEMENT ---
+    if (currentElbowAngle < elbowFinalTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    }
+    else if (currentElbowAngle > elbowFinalTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowFinalTarget) currentElbowAngle = elbowFinalTarget;
+      elbowRight.write(currentElbowAngle);
+      finished = false;
+    }
+
+    delay(20);
+  }
+
+  // short pause after the pose
+  delay(1800);
+
+  //
+  // --- 3) PLAY AUDIO 6 WITH SAME WOBBLE AS CASE 2 ---
+  //
+  Serial.println(F("Playing 6.mp3 with BIG elbow wobble"));
+  musicPlayer.startPlayingFile("/6.mp3");   // like 3.mp3 in case 2
+
+  int baseElbow       = currentElbowAngle;   // wobble around the final pose
+  int wobbleAmplitude = 20;
+
+  // SAME LIMIT LOGIC AS CASE 2
+  int lowLimit  = baseElbow - wobbleAmplitude;
+  if (lowLimit < 0) lowLimit = 0;
+
+  int highLimit = baseElbow + wobbleAmplitude;
+  if (highLimit > 180) highLimit = 180;
+
+  currentElbowAngle = baseElbow;
+  bool goingUp = true;
+
+  while (musicPlayer.playingMusic) {
+    if (goingUp) {
+      currentElbowAngle += 4;
+      if (currentElbowAngle >= highLimit) {
+        currentElbowAngle = highLimit;
+        goingUp = false;
+      }
+    } else {
+      currentElbowAngle -= 4;
+      if (currentElbowAngle <= lowLimit) {
+        currentElbowAngle = lowLimit;
+        goingUp = true;
+      }
+    }
+
+    elbowRight.write(currentElbowAngle);
+    delay(80);   // wobble speed (same feel as case 2)
+  }
+
+  // After audio 6, elbow stays at last wobble position
+  break;
+}
+
+case 5: {
+  Serial.println(F("Case 5: audio 7 + wobble, then shoulder down + elbow back to 95°"));
+
+// --- 1) PLAY AUDIO 7 WITH SAME WOBBLE AS CASE 2 ---
+Serial.println(F("Playing 7.mp3 with elbow wobble (same as case 2)"));
+musicPlayer.startPlayingFile("/7.mp3");   // audio 7
+
+int baseElbow       = currentElbowAngle;   // start wobble from EXACT current pose
+int wobbleAmplitude = 20;                  // same as case 2
+bool goingUp        = false;               // start by going slightly down
+
+while (musicPlayer.playingMusic) {
+  if (goingUp) {
+    currentElbowAngle += 4;
+    if (currentElbowAngle >= baseElbow) {
+      currentElbowAngle = baseElbow;
+      goingUp = false;
+    }
+  } else {
+    currentElbowAngle -= 4;
+    if (currentElbowAngle <= baseElbow - wobbleAmplitude) {
+      currentElbowAngle = baseElbow - wobbleAmplitude;
+      goingUp = true;
+    }
+  }
+
+  // safety clamp
+  if (currentElbowAngle < 0)   currentElbowAngle = 0;
+  if (currentElbowAngle > 180) currentElbowAngle = 180;
+
+  elbowRight.write(currentElbowAngle);
+  delay(80);   // same wobble speed as case 2
+}
+
+  //
+  // --- 2) AFTER AUDIO 7: SHOULDER DOWN + ELBOW BACK TO 95° ---
+  //
+  Serial.println(F("Audio 7 done – returning shoulder down and elbow back to 95°"));
+
+  int shoulderDownTarget = SHOULDER_RESET_ANGLE; // usually 30
+  int elbowReturnTarget  = 95;                   // same as case 2
+
+  bool returnDone = false;
+  while (!returnDone) {
+    returnDone = true;
+
+    // Shoulder down to reset
+    if (currentShoulderAngle < shoulderDownTarget) {
+      currentShoulderAngle += shoulderStepSize;
+      if (currentShoulderAngle > shoulderDownTarget) currentShoulderAngle = shoulderDownTarget;
+      shoulderRight.write(currentShoulderAngle);
+      returnDone = false;
+    } else if (currentShoulderAngle > shoulderDownTarget) {
+      currentShoulderAngle -= shoulderStepSize;
+      if (currentShoulderAngle < shoulderDownTarget) currentShoulderAngle = shoulderDownTarget;
+      shoulderRight.write(currentShoulderAngle);
+      returnDone = false;
+    }
+
+    // Elbow back to 95°
+    if (currentElbowAngle < elbowReturnTarget) {
+      currentElbowAngle += elbowStepSize;
+      if (currentElbowAngle > elbowReturnTarget) currentElbowAngle = elbowReturnTarget;
+      elbowRight.write(currentElbowAngle);
+      returnDone = false;
+    } else if (currentElbowAngle > elbowReturnTarget) {
+      currentElbowAngle -= elbowStepSize;
+      if (currentElbowAngle < elbowReturnTarget) currentElbowAngle = elbowReturnTarget;
+      elbowRight.write(currentElbowAngle);
+      returnDone = false;
+    }
+
+    delay(20);  // smooth motion
+  }
+
+  break;
+}
+
+
     }
   }
 }  // end of loop()
