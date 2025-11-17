@@ -144,7 +144,7 @@ const int SW1_PIN = 8, SW2_PIN = 9, SW3_PIN = 10, SW4_PIN = A3, SW5_PIN = A2;
 LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
 
-const int NUM_OF_STATES = 6;
+const int NUM_OF_STATES = 7;
 char* theStates[] = { "0 robot start state",
                       "1 robot scene1",
                       "2 robot scene3-1",
